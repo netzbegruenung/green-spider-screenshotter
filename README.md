@@ -1,10 +1,19 @@
+[![Docker Repository on Quay](https://quay.io/repository/netzbegruenung/green-spider-screenshotter/status "Docker Repository on Quay")](https://quay.io/repository/netzbegruenung/green-spider-screenshotter)
 
-Dockerfile for a website screenshot tool based on PhantomJS.
+# Green Spider Screenshotter
 
-Thanks to https://github.com/ubermuda/docker-screenshot for the inspiration!
+Part of https://github.com/netzbegruenung/green-spider
+
+Creates screenshots of web URLs in various resolutions. Uploads the resulting images
+to a Google Cloud Storage bucket, stores metadata in Google Cloud Datastore.
 
 ## Usage
 
-```
-docker run --rm -v $PWD:/srv netbegruenung/green-spider-screenshotter "http://www.google.com/" google.com.png "1500px*1500px"
+Place the Google Cloud service account JSON file into `secrets/service-account.json`.
+
+Then execute this:
+
+```nohighlight
+make
+make run
 ```
