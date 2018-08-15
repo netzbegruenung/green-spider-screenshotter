@@ -114,14 +114,13 @@ def make_screenshot(url, width, height):
             blob.make_public()
         os.remove(local_path)
             
-    return {
-        "url": url,
-        "width": width,
-        "height": height,
-        "screenshot_url": "http://%s/%s/%s" % (bucket_name, subfolder, filename),
-        "user_agent": "phantomjs-2.1.1",
-        "created": datetime.utcnow(),
-    }
+        return {
+            "url": url,
+            "size": [width, height],
+            "screenshot_url": "http://%s/%s/%s" % (bucket_name, subfolder, filename),
+            "user_agent": "phantomjs-2.1.1",
+            "created": datetime.utcnow(),
+        }
 
 
 
@@ -144,6 +143,9 @@ def main():
         
         for size in sizes:
             data = make_screenshot(url, size[0], size[1])
+            if data is None:
+                continue
+
             logging.debug(data)
 
             key = datastore_client.key('webscreenshot', data['screenshot_url'])
