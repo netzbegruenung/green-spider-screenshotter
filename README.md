@@ -17,3 +17,11 @@ Then execute this:
 make
 make run
 ```
+
+or
+
+```
+docker run --rm -ti \
+	-v $(pwd)/secrets:/secrets \
+	quay.io/netzbegruenung/green-spider-screenshotter
+```
