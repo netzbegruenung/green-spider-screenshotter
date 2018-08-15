@@ -16,6 +16,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import random
 from datetime import datetime
 from google.cloud import storage
 from google.cloud import datastore
@@ -49,7 +50,13 @@ def get_urls():
     count = 0
 
     r = requests.get(url)
-    for item in r.json():
+    items = r.json()
+
+    # randomize order, to increase resilience
+    random.seed()
+    random.shuffle(items)
+
+    for item in items:
         urls = item['details'].get('canonical_urls')
 
         if urls is None or len(urls) == 0:
