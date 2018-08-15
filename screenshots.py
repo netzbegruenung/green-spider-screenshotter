@@ -139,6 +139,9 @@ def main():
 
     datastore_client = datastore.Client.from_service_account_json(key_path)
 
+    # properties to not include in indexes
+    exclude_from_indexes = ['size', 'screenshot_url', 'user_agent', 'created']
+
     for url in get_urls():
         
         for size in sizes:
@@ -149,7 +152,7 @@ def main():
             logging.debug(data)
 
             key = datastore_client.key('webscreenshot', data['screenshot_url'])
-            entity = datastore.Entity(key=key)
+            entity = datastore.Entity(key=key, exclude_from_indexes=exclude_from_indexes)
             entity.update(data)
             datastore_client.put(entity)
     
