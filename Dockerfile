@@ -1,7 +1,7 @@
 FROM debian:stretch
 
 RUN apt-get update && \
-    apt-get install -y libfreetype6 libfontconfig wget bzip2 && \
+    apt-get install -y python3 python3-pip libfreetype6 libfontconfig wget bzip2 && \
     wget https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-2.1.1-linux-x86_64.tar.bz2 && \
     tar xjf phantomjs-2.1.1-linux-x86_64.tar.bz2 && \
     rm phantomjs-2.1.1-linux-x86_64.tar.bz2 && \
@@ -10,8 +10,12 @@ RUN apt-get update && \
 
 ADD https://raw.githubusercontent.com/ariya/phantomjs/master/examples/rasterize.js /rasterize.js
 
-VOLUME ["/srv"]
-
 WORKDIR /srv
 
-ENTRYPOINT ["/phantomjs/bin/phantomjs", "/rasterize.js"]
+COPY requirements.txt /srv/
+RUN pip3 install -r requirements.txt
+
+COPY screenshots.py /srv/
+
+
+ENTRYPOINT ["python3", "screenshots.py"]

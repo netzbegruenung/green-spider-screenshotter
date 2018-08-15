@@ -1,0 +1,9 @@
+# Defines indexes for the Google Cloud Datastore database
+
+indexes:
+  - kind: webscreenshot
+    ancestor: no
+    properties:
+    - name: url
+    - name: size
+    - name: screenshot_url
