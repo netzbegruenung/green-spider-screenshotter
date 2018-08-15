@@ -145,16 +145,17 @@ def main():
     for url in get_urls():
         
         for size in sizes:
-            data = make_screenshot(url, size[0], size[1])
-            if data is None:
-                continue
 
-            logging.debug(data)
-
-            key = datastore_client.key('webscreenshot', data['screenshot_url'])
-            entity = datastore.Entity(key=key, exclude_from_indexes=exclude_from_indexes)
-            entity.update(data)
-            datastore_client.put(entity)
+            try:
+                data = make_screenshot(url, size[0], size[1])
+                if data is not None:
+                    logging.debug(data)
+                    key = datastore_client.key('webscreenshot', data['screenshot_url'])
+                    entity = datastore.Entity(key=key, exclude_from_indexes=exclude_from_indexes)
+                    entity.update(data)
+                    datastore_client.put(entity)
+            except Exception as e:
+                logging.warn("Error in %s: %s" % (url, e))
     
     shutil.rmtree(tempdir)
 
