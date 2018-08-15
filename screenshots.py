@@ -130,7 +130,7 @@ def main():
     global bucket
     global tempdir
 
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
 
     tempdir = tempfile.mkdtemp()
 
