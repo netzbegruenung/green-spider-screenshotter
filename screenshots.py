@@ -8,6 +8,7 @@
 #
 # Written for Python 3
 
+import argparse
 import requests
 import logging
 import hashlib
@@ -75,7 +76,7 @@ def get_urls():
     logging.info("Read %s URLs from source" % count)
 
 
-def make_screenshot(url, width, height):
+def make_screenshot(url, width, height, loglevel):
     """
     Creates a screenshot for the URL in the given size
     and return a metadata record. Uploads the resulting
@@ -97,10 +98,14 @@ def make_screenshot(url, width, height):
 
     os.makedirs(local_dir, exist_ok=True)
 
-    command = [
-        '/phantomjs/bin/phantomjs', '/rasterize.js',
-        url, local_path, sizeargument
-    ]
+    command = ['/phantomjs/bin/phantomjs']
+    if loglevel == 'debug':
+        command.append('--debug=true')
+        command.append('--webdriver-loglevel=DEBUG')
+    command.append('/rasterize.js')
+    command.append(url)
+    command.append(local_path)
+    command.append(sizeargument)
     subprocess.run(command)
 
     # Upload outcome
@@ -130,24 +135,47 @@ def main():
     global bucket
     global tempdir
 
-    logging.basicConfig(level=logging.INFO)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--credentials-path', dest='credentials_path',
+                        help='Path to the service account credentials JSON file',
+                        default='/secrets/service-account.json')
+    parser.add_argument('--loglevel', help="error, warn, info, or debug (default: info)", default='info')
+    parser.add_argument('--url', dest='urls', help='URL(s) to create screenshots for', nargs='*')
+    args = parser.parse_args()
+
+    print(args)
+
+    loglevel = args.loglevel.lower()
+    if loglevel == 'error':
+        logging.basicConfig(level=logging.ERROR)
+    elif loglevel == 'warn':
+        logging.basicConfig(level=logging.WARN)
+    elif loglevel == 'debug':
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.INFO)
+        loglevel = 'info'
 
     tempdir = tempfile.mkdtemp()
 
-    storage_client = storage.Client.from_service_account_json(key_path)
+    storage_client = storage.Client.from_service_account_json(args.credentials_path)
     bucket = storage_client.get_bucket(bucket_name)
 
-    datastore_client = datastore.Client.from_service_account_json(key_path)
+    datastore_client = datastore.Client.from_service_account_json(args.credentials_path)
 
     # properties to not include in indexes
     exclude_from_indexes = ['size', 'screenshot_url', 'user_agent', 'created']
 
-    for url in get_urls():
+    urls = args.urls
+    if urls is None:
+        urls = list(get_urls())
+
+    for url in urls:
         
         for size in sizes:
 
             try:
-                data = make_screenshot(url, size[0], size[1])
+                data = make_screenshot(url, size[0], size[1], loglevel)
                 if data is not None:
                     logging.debug(data)
                     key = datastore_client.key('webscreenshot', data['screenshot_url'])
