@@ -28,7 +28,7 @@ urls_done = {}
 
 tempdir = None
 
-sizes = ([320, 640], [1500, 1500])
+sizes = ([360, 640], [1500, 1500])
 
 key_path = '/secrets/service-account.json'
 
@@ -44,7 +44,7 @@ def get_urls():
     Read URL list to create screenshots for, return
     as iterator in shuffled order.
     """
-    url = "https://github.com/netzbegruenung/green-spider/raw/master/docs/data/spider_result.json"
+    url = "https://github.com/netzbegruenung/green-spider-webapp/raw/master/src/spider_result_compact.json"
 
     logging.info("Getting URL data from %s" % url)
 
@@ -58,7 +58,7 @@ def get_urls():
     random.shuffle(items)
 
     for item in items:
-        urls = item['details'].get('canonical_urls')
+        urls = item.get('resulting_urls')
 
         if urls is None or len(urls) == 0:
             continue
