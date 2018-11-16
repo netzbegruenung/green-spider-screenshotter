@@ -30,36 +30,41 @@ tempdir = None
 
 sizes = ([360, 640], [1500, 1500])
 
-key_path = '/secrets/service-account.json'
-
 bucket_name = "green-spider-screenshots.sendung.de"
+
+spider_results_kind = 'spider-results'
 
 storage_client = None
 datastore_client = None
 bucket = None
 
 
-def get_urls():
+def get_urls(client):
     """
     Read URL list to create screenshots for, return
     as iterator in shuffled order.
     """
-    url = "https://github.com/netzbegruenung/green-spider-webapp/raw/master/src/spider_result_compact.json"
+    logging.info("Getting URL data")
 
-    logging.info("Getting URL data from %s" % url)
+    query = client.query(kind=spider_results_kind)
 
     count = 0
-
-    r = requests.get(url)
-    items = r.json()
+    items = []
+    for entity in query.fetch(eventual=True):
+        items.append(entity)
 
     # randomize order, to increase resilience
     random.seed()
     random.shuffle(items)
 
     for item in items:
-        urls = item.get('resulting_urls')
+        print(item.key.name)
+        checks = item.get('checks')
+        
+        if checks is None:
+            continue
 
+        urls = checks.get('url_canonicalization')
         if urls is None or len(urls) == 0:
             continue
 
@@ -136,9 +141,14 @@ def main():
     global tempdir
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--credentials-path', dest='credentials_path',
-                        help='Path to the service account credentials JSON file',
-                        default='/secrets/service-account.json')
+    parser.add_argument('--storage-credentials-path',
+                        dest='storage_credentials_path',
+                        help='Path to the cloud storage service account credentials JSON file',
+                        default='/secrets/screenshots-uploader.json')
+    parser.add_argument('--datastore-credentials-path',
+                        dest='datastore_credentials_path',
+                        help='Path to the datastore service account credentials JSON file',
+                        default='/secrets/datastore-writer.json')
     parser.add_argument('--loglevel', help="error, warn, info, or debug (default: info)", default='info')
     parser.add_argument('--url', dest='urls', help='URL(s) to create screenshots for', nargs='*')
     args = parser.parse_args()
@@ -158,17 +168,17 @@ def main():
 
     tempdir = tempfile.mkdtemp()
 
-    storage_client = storage.Client.from_service_account_json(args.credentials_path)
+    storage_client = storage.Client.from_service_account_json(args.storage_credentials_path)
     bucket = storage_client.get_bucket(bucket_name)
 
-    datastore_client = datastore.Client.from_service_account_json(args.credentials_path)
+    datastore_client = datastore.Client.from_service_account_json(args.datastore_credentials_path)
 
     # properties to not include in indexes
     exclude_from_indexes = ['size', 'screenshot_url', 'user_agent', 'created']
 
     urls = args.urls
     if urls is None:
-        urls = list(get_urls())
+        urls = list(get_urls(datastore_client))
 
     for url in urls:
         
