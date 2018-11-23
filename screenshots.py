@@ -58,7 +58,7 @@ def get_urls(client):
     random.shuffle(items)
 
     for item in items:
-        print(item.key.name)
+        logging.debug("Importing resulting URL(s) from %s" % item.key.name)
         checks = item.get('checks')
         
         if checks is None:
@@ -66,12 +66,16 @@ def get_urls(client):
 
         urls = checks.get('url_canonicalization')
         if urls is None or len(urls) == 0:
+            logging.debug("No URL for %s" % item.key.name)
             continue
 
         url = urls[0]
 
         if url in urls_done:
+            logging.debug("URL %s is already marked as done. Skipping." % url)
             continue
+        
+        logging.debug("Selecting URL for site '%s': %s" % (item.key.name, url))
 
         count += 1
         urls_done[url] = True
@@ -181,7 +185,7 @@ def main():
         urls = list(get_urls(datastore_client))
 
     for url in urls:
-        
+
         for size in sizes:
 
             try:
