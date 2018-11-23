@@ -111,6 +111,10 @@ def make_screenshot(url, width, height, loglevel):
     if loglevel == 'debug':
         command.append('--debug=true')
         command.append('--webdriver-loglevel=DEBUG')
+    
+    # Required since IDN (punycode) and TLS produce hostname mismatch errors
+    command.append('--ignore-ssl-errors=true')
+    
     command.append('/rasterize.js')
     command.append(url)
     command.append(local_path)
